@@ -1,0 +1,1 @@
+This is a discord bot that takes the state of certain VCs in discord and writes the user information to a google sheet. It currently supports adding and removing new events to an events file, which ultimately changes which column in the sheet the attendance marker is written to.

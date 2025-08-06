@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
-const events = require('../../events.json');
+let events = require('../../events.json');
 const fs = require('fs').promises;
+const { approvedChannel } = require('../../config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,6 +13,14 @@ module.exports = {
                 .setRequired(true)
                 .setAutocomplete(true)),
     async autocomplete(interaction) {
+        fs.readFile('events.json', 'utf8', async (err, data) => {
+            if (err) {
+                console.error(err);
+                return;
+            }
+            events = JSON.parse(data);
+        });
+
         const focusedValue = interaction.options.getFocused().toLowerCase();
         const choices = Object.keys(events);
         const filtered = choices.filter(choice => choice.toLowerCase().startsWith(focusedValue));
@@ -20,6 +29,19 @@ module.exports = {
         );
     },
     async execute(interaction) {
+        if (approvedChannel !== interaction.channel.id) {
+            await interaction.reply({ content: 'You are not allowed to use this command', ephemeral: true });
+            return;
+        }
+
+        fs.readFile('events.json', 'utf8', async (err, data) => {
+            if (err) {
+                console.error(err);
+                return;
+            }
+            events = JSON.parse(data);
+        });
+
         const eventName = interaction.options.getString('event');
         const column = events[eventName];
         const newEvents = {};
@@ -39,6 +61,7 @@ module.exports = {
                 }
             }
         });
+
         await fs.writeFile('events.json', JSON.stringify(newEvents, null, 2));
         await interaction.reply({ content: `Event ${eventName} removed`, ephemeral: true });
     },

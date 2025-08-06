@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
-const events = require('../../events.json');
+let events = require('../../events.json');
 const fs = require('fs').promises;
+const { approvedChannel } = require('../../config.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -17,6 +18,19 @@ module.exports = {
                 .setDescription('The column to add the event to')
                 .setRequired(true)),
     async execute(interaction) {
+        if (approvedChannel !== interaction.channel.id) {
+            await interaction.reply({ content: 'You are not allowed to use this command', ephemeral: true });
+            return;
+        }
+
+        fs.readFile('events.json', 'utf8', async (err, data) => {
+            if (err) {
+                console.error(err);
+                return;
+            }
+            events = JSON.parse(data);
+        });
+        
         const eventName = interaction.options.getString('event');
         const column = interaction.options.getString('column');
         let newEvents = {};

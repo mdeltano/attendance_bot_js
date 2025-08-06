@@ -3,7 +3,8 @@ const { google } = require('googleapis');
 const { GoogleAuth } = require('google-auth-library');
 const fs = require('fs').promises;
 const events = require('../../events.json');
-const { spreadsheetId } = require('../../config.json');
+const { spreadsheetId, approvedChannel, voiceChannelIds } = require('../../config.json');
+
 
 
 module.exports = {
@@ -24,6 +25,10 @@ module.exports = {
 		);
     },
     async execute(interaction) {
+        if (approvedChannel !== interaction.channel.id) {
+            await interaction.reply({ content: 'You are not allowed to use this command', ephemeral: true });
+            return;
+        }
         console.log('Executing attendance command');
         
         const credentials = await fs.readFile('credentials.json', 'utf8');
@@ -53,20 +58,17 @@ module.exports = {
         const sheets = google.sheets({ version: 'v4', auth: authClient});
         const range = '\'Roster Mk.II\'!AF:AF';
 
-        voice_channel_ids = [
-            BigInt('685715754880073738'),
-        ];
-
         user_ids = [];
 
         //grab all user ids in each voice channel
-        voice_channel_ids.forEach((channelId) => {
-            interaction.client.channels.fetch(channelId).then((voiceChannel) => {
+        voiceChannelIds.forEach((channelId) => {
+            const bigIntChannelId = BigInt(channelId);
+            console.log(`Checking voice channel ${channelId}`);
+            interaction.client.channels.fetch(bigIntChannelId).then((voiceChannel) => {
                 voiceChannel.members.forEach((member) => {
                     user_ids.push(member.id);
                     console.log(`Found user ${member.id} in voice channel ${voiceChannel.name}`);
                 });
-
             });
         });
 
@@ -82,22 +84,19 @@ module.exports = {
             if (matchingRow) {
                 const rowIndex = data.indexOf(matchingRow);
                 console.log(`User ${user_id} found in spreadsheet at row ${rowIndex + 1}`);
-                //TODO: column changes based on event
-                const columnIndex = 0;
 
                 sheets.spreadsheets.values.update({
                     spreadsheetId: spreadsheetId,
-                    //update M dynamically based on event
                     range: `\'Roster Mk.II\'!${columnId}${rowIndex + 1}`,
                     valueInputOption: 'RAW',
                     resource: {
-                        //TODO: update value for what officers normally enter
                         values: [[1]],
                     },
-                }, (err, response) => {
+                }, async (err, response) => {
                     if (err) {
                         console.error(err);
                     } else {
+                        interaction.channel.send(`${await interaction.guild.members.fetch(user_id)} has been marked present for ${event}!`);
                         console.log(`Updated ${user_id} in spreadsheet`);
                     }
                 });
@@ -105,7 +104,5 @@ module.exports = {
                 console.log(`User ${user_id} not found in spreadsheet`);
             }
         });
-
-        interaction.reply('Attendance taken!');
     },
 };

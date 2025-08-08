@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, Client, GatewayIntentBits } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const { google } = require('googleapis');
 const { GoogleAuth } = require('google-auth-library');
 const fs = require('fs').promises;
@@ -78,8 +78,10 @@ module.exports = {
         });
 
         const data = response.data.values;
+        
+        interaction.channel.send(`${new Date(Date.now()).toLocaleDateString()} Attendance for ${event}`);
 
-        user_ids.forEach((user_id) => {
+        user_ids.forEach(async (user_id) => {
             const matchingRow = data.find((row) => row[0] === user_id);
             if (matchingRow) {
                 const rowIndex = data.indexOf(matchingRow);
@@ -96,13 +98,15 @@ module.exports = {
                     if (err) {
                         console.error(err);
                     } else {
-                        interaction.channel.send(`${await interaction.guild.members.fetch(user_id)} has been marked present for ${event}!`);
+                        interaction.channel.send(`${await interaction.guild.members.fetch(user_id)}`);
                         console.log(`Updated ${user_id} in spreadsheet`);
                     }
                 });
             } else {
+                interaction.channel.send(`${await interaction.guild.members.fetch(user_id)} not found in spreadsheet`);
                 console.log(`User ${user_id} not found in spreadsheet`);
             }
         });
+        interaction.reply({ content: 'Attendance successfully taken', ephemeral: true });
     },
 };

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { voiceChannelIds, approvedChannel } = require('../../config.json');
+const { voiceChannelIds, approvedChannel, spreadsheetId } = require('../../config.json');
 const { google } = require('googleapis');
 const { GoogleAuth } = require('google-auth-library');
 const fs = require('fs').promises;
@@ -8,7 +8,7 @@ const fs = require('fs').promises;
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('dumpusers')
-        .setDescription('Dump users tags and ids to logs channel'),
+        .setDescription('Dump users not in spreadsheet\'s tags and ids to logs channel'),
     async execute(interaction) { 
         if (approvedChannel !== interaction.channel.id) {
             await interaction.reply({ content: 'You are not allowed to use this command', ephemeral: true });
@@ -40,9 +40,9 @@ module.exports = {
                     } else {
                         interaction.channel.send(`${await interaction.guild.members.fetch(member.id)} : ${member.id}`);
                     }
-                    
                 });
             })
         });
+        interaction.reply({ content: 'All users not detected in spreadsheet dumped', ephemeral: true });
     },
 }

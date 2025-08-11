@@ -56,7 +56,7 @@ module.exports = {
         const authClient = auth.fromJSON(credentials_parsed);
 
         const sheets = google.sheets({ version: 'v4', auth: authClient});
-        const range = '\'Roster Mk.II\'!AF:AF';
+        const range = '\'Roster Mk.II\'!D:D';
 
         user_ids = [];
 
@@ -79,7 +79,7 @@ module.exports = {
 
         const data = response.data.values;
         
-        interaction.channel.send(`${new Date(Date.now()).toLocaleDateString()} Attendance for ${event}`);
+        interaction.channel.send(`${new Date(Date.now()).toLocaleDateString()} ${event}`);
 
         user_ids.forEach(async (user_id) => {
             const matchingRow = data.find((row) => row[0] === user_id);
@@ -103,7 +103,7 @@ module.exports = {
                     }
                 });
             } else {
-                interaction.channel.send(`${await interaction.guild.members.fetch(user_id)} not found in spreadsheet`);
+                interaction.channel.send(`${await interaction.guild.members.fetch(user_id)} not found in spreadsheet : ID ${user_id}`);
                 console.log(`User ${user_id} not found in spreadsheet`);
             }
         });

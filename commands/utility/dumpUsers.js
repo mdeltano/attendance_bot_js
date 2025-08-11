@@ -3,12 +3,13 @@ const { voiceChannelIds, approvedChannel, spreadsheetId } = require('../../confi
 const { google } = require('googleapis');
 const { GoogleAuth } = require('google-auth-library');
 const fs = require('fs').promises;
+const { fetch, setGlobalDispatcher, Agent } = require('undici');
 
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('dumpusers')
-        .setDescription('Dump users not in spreadsheet\'s tags and ids to logs channel'),
+        .setDescription('Dump users not in spreadsheet\'s tags and ids to this channel'),
     async execute(interaction) { 
         if (approvedChannel !== interaction.channel.id) {
             await interaction.reply({ content: 'You are not allowed to use this command', ephemeral: true });
@@ -21,7 +22,7 @@ module.exports = {
         const authClient = auth.fromJSON(JSON.parse(credentials));
 
         const sheets = google.sheets({ version: 'v4', auth: authClient });
-        const range = '\'Roster Mk.II\'!AF:AF';
+        const range = '\'Roster Mk.II\'!D:D';
 
         const response = await sheets.spreadsheets.values.get({
             spreadsheetId: spreadsheetId,
@@ -32,6 +33,7 @@ module.exports = {
 
         voiceChannelIds.forEach((channelId) => {
             const bigIntChannelId = BigInt(channelId);
+            setGlobalDispatcher(new Agent({ connect: { timeout: 60_000 } }) );
             interaction.client.channels.fetch(bigIntChannelId).then((channel) => {
                 channel.members.forEach(async (member) => {
                     const matchingRow = data.find(row => row[0] === member.id);

@@ -1,11 +1,18 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, ChannelType } = require('discord.js');
 const { google } = require('googleapis');
 const { GoogleAuth } = require('google-auth-library');
 const fs = require('fs').promises;
 const events = require('../../events.json');
-const { spreadsheetId, approvedChannel, voiceChannelIds } = require('../../config.json');
+const { spreadsheetId, approvedChannel, categoryId, sheetId } = require('../../config.json');
+const { fetch, setGlobalDispatcher, Agent } = require('undici');
 
-
+function columnLetterToNumber(columnId) {
+    if (columnId.length === 2) {
+        return columnId.toLowerCase().charCodeAt(1) - 97 + 26;
+    } else {
+        return columnId.toLowerCase().charCodeAt(0) - 97;
+    }
+}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -58,7 +65,15 @@ module.exports = {
         const sheets = google.sheets({ version: 'v4', auth: authClient});
         const range = '\'Roster Mk.II\'!D:D';
 
+        setGlobalDispatcher(new Agent({ connect: { timeout: 60_000 } }) );
+
         user_ids = [];
+        const channels = await interaction.guild.channels.fetch();
+
+        voiceChannelIds = channels.filter((channel) => 
+            channel.parentId === categoryId && 
+            channel.type === ChannelType.GuildVoice)
+        .map((channel) => channel.id);
 
         //grab all user ids in each voice channel
         voiceChannelIds.forEach((channelId) => {
@@ -78,35 +93,47 @@ module.exports = {
         });
 
         const data = response.data.values;
+        requests = [];
         
         interaction.channel.send(`${new Date(Date.now()).toLocaleDateString()} ${event}`);
 
-        user_ids.forEach(async (user_id) => {
+        await Promise.all(user_ids.map(async (user_id) => {
             const matchingRow = data.find((row) => row[0] === user_id);
             if (matchingRow) {
                 const rowIndex = data.indexOf(matchingRow);
                 console.log(`User ${user_id} found in spreadsheet at row ${rowIndex + 1}`);
-
-                sheets.spreadsheets.values.update({
-                    spreadsheetId: spreadsheetId,
-                    range: `\'Roster Mk.II\'!${columnId}${rowIndex + 1}`,
-                    valueInputOption: 'RAW',
-                    resource: {
-                        values: [[1]],
-                    },
-                }, async (err, response) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        interaction.channel.send(`${await interaction.guild.members.fetch(user_id)}`);
-                        console.log(`Updated ${user_id} in spreadsheet`);
+                interaction.channel.send(`${await interaction.guild.members.fetch(user_id)}`);
+                requests.push({
+                    updateCells: {
+                        rows: [{ values: [{ userEnteredValue: { numberValue: 1 } }] }],
+                        range: {
+                            sheetId: sheetId,
+                            startRowIndex: rowIndex,
+                            endRowIndex: rowIndex + 1,
+                            startColumnIndex: columnLetterToNumber(columnId),
+                            endColumnIndex: columnLetterToNumber(columnId) + 1
+                        },
+                        fields: 'userEnteredValue'
                     }
                 });
             } else {
                 interaction.channel.send(`${await interaction.guild.members.fetch(user_id)} not found in spreadsheet : ID ${user_id}`);
                 console.log(`User ${user_id} not found in spreadsheet`);
             }
+        }));
+
+        let body = { requests };
+        sheets.spreadsheets.batchUpdate({
+            spreadsheetId: spreadsheetId,
+            resource: body
+        }, (err, response) => {
+            if (err) {
+                console.error(err);
+            } else {
+                console.log("Spreadsheet updated successfully");
+            }
         });
+
         interaction.reply({ content: 'Attendance successfully taken', ephemeral: true });
     },
 };

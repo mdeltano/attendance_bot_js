@@ -31,6 +31,13 @@ module.exports = {
 
         const data = response.data.values;
 
+        const channels = await interaction.guild.channels.fetch();
+
+        voiceChannelIds = channels.filter((channel) => 
+            channel.parentId === categoryId && 
+            channel.type === ChannelType.GuildVoice)
+        .map((channel) => channel.id);
+
         voiceChannelIds.forEach((channelId) => {
             const bigIntChannelId = BigInt(channelId);
             setGlobalDispatcher(new Agent({ connect: { timeout: 60_000 } }) );

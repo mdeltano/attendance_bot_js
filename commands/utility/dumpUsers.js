@@ -1,5 +1,5 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { voiceChannelIds, approvedChannel, spreadsheetId } = require('../../config.json');
+const { SlashCommandBuilder, ChannelType } = require('discord.js');
+const { approvedChannel, spreadsheetId, categoryId } = require('../../config.json');
 const { google } = require('googleapis');
 const { GoogleAuth } = require('google-auth-library');
 const fs = require('fs').promises;

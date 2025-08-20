@@ -2,6 +2,7 @@ const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require(
 const { token } = require('./config.json');
 const fs = require('node:fs');
 const path = require('node:path');
+const { exec } = require('child_process');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
 
@@ -24,6 +25,8 @@ for (const folder of commandFolders) {
 		}
 	}
 }
+
+await execSync('node deploy-commands.js');
 
 client.once(Events.ClientReady, readyClient => {
     console.log(`Ready! Logged in as ${readyClient.user.tag}`);

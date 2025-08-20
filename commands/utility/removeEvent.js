@@ -67,8 +67,8 @@ module.exports = {
         await interaction.reply({ content: `Event ${eventName} removed, refreshing and restarting...`, ephemeral: true });
 
         //run deploy-commands.js to update commands
-        exec('node deploy-commands.js');
+        execSync('node deploy-commands.js');
         //restart bot
-        exec('node index.js');
+        execSync('node index.js');
     },
 };

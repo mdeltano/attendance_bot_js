@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 let events = require('../../events.json');
 const fs = require('fs').promises;
 const { approvedChannel } = require('../../config.json');
+const { exec } = require('child_process');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -65,7 +66,12 @@ module.exports = {
         }
 
         await fs.writeFile('events.json', JSON.stringify(newEvents, null, 2));
-        await interaction.reply({ content: `Event ${eventName} added to column ${column}`, ephemeral: true });
+        await interaction.reply({ content: `Event ${eventName} added to column ${column}, refreshing and restarting bot...`, ephemeral: true });
+
+        //run deploy-commands.js to update commands
+        exec('node deploy-commands.js');
+        //restart bot
+        exec('node index.js');
 
     }
 

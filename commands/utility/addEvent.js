@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('discord.js');
 let events = require('../../events.json');
 const fs = require('fs').promises;
 const { approvedChannel } = require('../../config.json');
-const { exec } = require('child_process');
+const { execSync } = require('child_process');
 
 module.exports = {
     data: new SlashCommandBuilder()

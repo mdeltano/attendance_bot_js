@@ -2,7 +2,7 @@ const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require(
 const { token } = require('./config.json');
 const fs = require('node:fs');
 const path = require('node:path');
-const { exec } = require('child_process');
+const { execSync } = require('child_process');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
 

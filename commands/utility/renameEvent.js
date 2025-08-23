@@ -12,9 +12,10 @@ module.exports = {
         .addStringOption(option =>
             option.setName('event')
                 .setDescription('The event to rename')
-                .setRequired(true))
+                .setRequired(true)
+                .setAutocomplete(true))
         .addStringOption(option =>
-            option.setName('newname')
+            option.setName('new name')
                 .setDescription('The new name of the event')
                 .setRequired(true)),
     async autocomplete(interaction) {

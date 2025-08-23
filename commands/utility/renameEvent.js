@@ -15,7 +15,7 @@ module.exports = {
                 .setRequired(true)
                 .setAutocomplete(true))
         .addStringOption(option =>
-            option.setName('new name')
+            option.setName('new_name')
                 .setDescription('The new name of the event')
                 .setRequired(true)),
     async autocomplete(interaction) {

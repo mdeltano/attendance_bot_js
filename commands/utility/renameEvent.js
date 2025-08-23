@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('@discordjs');
+const { SlashCommandBuilder } = require('discord.js');
 const fs = require('fs').promises;
 let events = require('../../events.json');
 const { approvedChannel } = require('../../config.json');

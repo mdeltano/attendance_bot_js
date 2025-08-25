@@ -101,7 +101,9 @@ module.exports = {
         const data = response.data.values;
         requests = [];
         
-        interaction.channel.send(`${new Date(Date.now()).toLocaleDateString()} ${event}`);
+        interaction.channel.send(`${new Date(Date.now()).toLocaleDateString("en-US", {
+            timeZone: "America/New_York"
+        })} ${event}`);
 
         //take the found user ids and convert them to api requests to update the spreadsheet, if they are found in the spreadsheet
         await Promise.all(user_ids.map(async (user_id) => {

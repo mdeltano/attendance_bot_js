@@ -3,7 +3,7 @@ const { google } = require('googleapis');
 const { GoogleAuth } = require('google-auth-library');
 const fs = require('fs').promises;
 const events = require('../../events.json');
-const { spreadsheetId, approvedChannel, categoryId, sheetId } = require('../../config.json');
+const { spreadsheetId, approvedChannel, categoryIds, sheetId } = require('../../config.json');
 const { fetch, setGlobalDispatcher, Agent } = require('undici');
 
 function columnLetterToNumber(columnId) {
@@ -76,7 +76,7 @@ module.exports = {
 
         //grab all voice channel ids in the provided category
         voiceChannelIds = channels.filter((channel) => 
-            channel.parentId === categoryId && 
+            categoryIds.includes(channel.parentId) && 
             channel.type === ChannelType.GuildVoice)
         .map((channel) => channel.id);
 

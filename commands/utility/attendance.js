@@ -81,16 +81,21 @@ module.exports = {
         .map((channel) => channel.id);
 
         //grab all user ids in each voice channel in the provided category
-        voiceChannelIds.forEach((channelId) => {
-            const bigIntChannelId = BigInt(channelId);
+        for (const channelId of voiceChannelIds) {
             console.log(`Checking voice channel ${channelId}`);
-            interaction.client.channels.fetch(bigIntChannelId).then((voiceChannel) => {
-                voiceChannel.members.forEach((member) => {
+            try {
+                //fetch the voice channel
+                const voiceChannel = await interaction.client.channels.fetch(channelId);
+                
+                //fetch members ensures we have the cache
+                await voiceChannel.members.each((member) => {
                     user_ids.push(member.id);
                     console.log(`Found user ${member.id} in voice channel ${voiceChannel.name}`);
                 });
-            });
-        });
+            } catch (error) {
+                console.error(`Failed to fetch channel ${channelId}:`, error);
+            }
+        }
 
         //get all the user ids currently in the spreadsheet
         const response = await sheets.spreadsheets.values.get({
@@ -136,6 +141,12 @@ module.exports = {
                 console.log(`User ${user_id} not found in spreadsheet`);
             }
         }));
+
+        if (requests.length === 0) {
+            console.log("No matching users found to update.");
+            await interaction.followUp({ content: 'No users found to update in the spreadsheet.', ephemeral: true });
+            return; 
+        }
 
         //format and send api request
         let body = { requests };
